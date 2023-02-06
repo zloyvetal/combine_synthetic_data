@@ -1,20 +1,14 @@
-from datetime import datetime
 from typing import Any
 
 import pandas as pd
 from sqlalchemy import ForeignKey
-from sqlalchemy import String, Integer, Column, String, BigInteger, Date
+from sqlalchemy import Integer, Column, String, Date
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
 
 XLSX_FILE = "test_data.xlsx"
 
-engine = create_engine("postgresql://postgres:123@localhost/task1", echo=False)
+engine = create_engine("postgresql://postgres:postgres@localhost/postgres", echo=False)
 Session = sessionmaker(bind=engine)
 
 BaseModel = declarative_base()
@@ -60,7 +54,7 @@ class Revenue(BaseModel):
     opportunity_id = Column(Integer, ForeignKey("opportunities.opportunity_id"))
 
     date = Column(Date)
-    value = Column(Integer, ForeignKey("opportunities.opportunity_id"))
+    value = Column(Integer)
 
     def __init__(self, opportunity_id, date, value):
         self.opportunity_id = opportunity_id
@@ -76,9 +70,9 @@ class SegmentCodes(BaseModel):
     id = Column(Integer, primary_key=True)
 
     segment_label = Column(String)
-    recency_score = Column(String)
-    frequency_score = Column(String)
-    monetary_score = Column(String)
+    recency_score = Column(Integer)
+    frequency_score = Column(Integer)
+    monetary_score = Column(Integer)
 
     def __init__(self, segment_label, recency_score, frequency_score, monetary_score):
         self.segment_label = segment_label
@@ -91,7 +85,14 @@ class SegmentCodes(BaseModel):
                f"frequency_score = {self.frequency_score!r}, monetary_score = {self.monetary_score!r})"
 
 
+BaseModel.metadata.create_all(bind=engine)
+
+
 def xlsx_to_dict(xlsx_file, sheet_number) -> list[dict[str: Any]]:
+    if sheet_number == 2:
+        df = pd.read_excel(xlsx_file, sheet_name=sheet_number)
+        df2 = df.melt(id_vars="Opportunity Id", var_name="date", value_name="value")
+        return df2.sort_values("Opportunity Id").to_dict(orient="records")
     df = pd.read_excel(xlsx_file, sheet_name=sheet_number)
     dict_data = df.to_dict(orient="records")
 
@@ -115,14 +116,13 @@ with Session() as session, session.begin():
             account_id=i['Account Id']
         ))
 
-    # revenue_data = xlsx_to_dict(XLSX_FILE, 2)
-    # for i in revenue_data:
-    #     session.add(Revenue(
-    #
-    #     opportunity_id=i['Opportunity Id'],
-    #     date="",
-    #     value=""
-    #     ))
+    revenue_data = xlsx_to_dict(XLSX_FILE, 2)
+    for i in revenue_data:
+        session.add(Revenue(
+            opportunity_id=i['Opportunity Id'],
+            date=i['date'],
+            value=i['value']
+        ))
 
     segment_codes_date = xlsx_to_dict(XLSX_FILE, 3)
     for i in segment_codes_date:
