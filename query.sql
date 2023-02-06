@@ -1,4 +1,4 @@
-CREATE VIEW Task_1 AS
+CREATE VIEW combine_synthetic_data AS
 SELECT ac.acc_id AS account_id,
        ac.company_name AS company_name,
        COALESCE(refr.recency_score, 0) AS recency_score,
