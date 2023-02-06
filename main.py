@@ -5,6 +5,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Integer, Column, String, Date
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import text
 
 XLSX_FILE = "test_data.xlsx"
 
@@ -132,3 +133,7 @@ with Session() as session, session.begin():
             frequency_score=i["Frequency Score"],
             monetary_score=i["Monetary Score"]
         ))
+
+    with open("query.sql") as file:
+        query = text(file.read())
+        session.execute(query)
