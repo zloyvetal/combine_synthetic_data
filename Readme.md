@@ -1,4 +1,4 @@
-# Task 1 (combine this synthetic )
+# Task 1 (combine synthetic data)
 
 
 ## Getting Started
